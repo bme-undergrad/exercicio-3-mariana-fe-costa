@@ -1,0 +1,34 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: test
+      id: test
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: test
+        setup-command: sudo apt update && sudo apt install octave && sudo apt install
+          octave-dev && sudo apt install octave-statistics
+        command: octave --eval "pkg install -forge struct; pkg install -forge io;
+          pkg install -forge optim; [mu1] = exercicio3([0, 1, 2], [0.1, 0.332, 1.102]);
+          [mu2] = exercicio3([3, 4, 5, 6],[1.644, 2.453, 3.660, 5.460]); assert((mu1
+          - 1.2) < 0.01 || (mu2 - 0.4)<0.01)"
+        timeout: 10
+        max-score: 1
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        TEST_RESULTS: "${{steps.test.outputs.result}}"
+      with:
+        runners: test
